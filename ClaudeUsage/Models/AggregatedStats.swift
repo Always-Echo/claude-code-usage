@@ -16,6 +16,7 @@ struct AggregatedStats {
     let modelBreakdowns: [ModelBreakdown]
     let chartBars: [PeriodBar]
     let dimensionLabel: String
+    var cacheSavingsUSD: Double
 
     static let empty = AggregatedStats(
         totalCostUSD: 0, totalTokens: 0,
@@ -23,6 +24,7 @@ struct AggregatedStats {
         cacheReadTokens: 0, cacheCreationTokens: 0,
         cacheHitRate: 0, costDelta: 0, tokenDeltaPercent: 0,
         sessionCount: 0, projectCount: 0, activeDuration: 0,
-        modelBreakdowns: [], chartBars: [], dimensionLabel: ""
+        modelBreakdowns: [], chartBars: [], dimensionLabel: "",
+        cacheSavingsUSD: 0
     )
 }

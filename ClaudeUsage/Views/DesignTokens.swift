@@ -39,6 +39,32 @@ extension Color {
     }
 }
 
+// Fix 4: Shared formatters to avoid duplication across view files
+enum Formatters {
+    static func tokens(_ count: Int) -> String {
+        if count >= 1_000_000 {
+            return String(format: "%.1fM", Double(count) / 1_000_000)
+        } else if count >= 1_000 {
+            return String(format: "%.0fk", Double(count) / 1_000)
+        }
+        return "\(count)"
+    }
+
+    static func cost(_ usd: Double) -> String {
+        String(format: "$%.2f", usd)
+    }
+
+    static let number: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        return f
+    }()
+
+    static func formattedNumber(_ n: Int) -> String {
+        number.string(from: NSNumber(value: n)) ?? "\(n)"
+    }
+}
+
 enum DS {
     static let panelWidth:   CGFloat = 320
     static let cornerRadius: CGFloat = 9

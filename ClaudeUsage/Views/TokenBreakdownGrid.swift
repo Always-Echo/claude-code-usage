@@ -21,7 +21,7 @@ struct TokenBreakdownGrid: View {
                         Text(item.name)
                             .font(.system(size: 9))
                             .foregroundColor(.textFaint)
-                        Text(formatNumber(item.count))
+                        Text(Formatters.formattedNumber(item.count))
                             .font(.system(size: 10).monospacedDigit())
                             .foregroundColor(.textSecondary)
                     }
@@ -33,9 +33,4 @@ struct TokenBreakdownGrid: View {
         .padding(.vertical, DS.spacing8)
     }
 
-    private func formatNumber(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
-    }
 }

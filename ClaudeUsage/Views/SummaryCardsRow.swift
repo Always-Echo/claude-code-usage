@@ -13,14 +13,14 @@ struct SummaryCardsRow: View {
             )
             StatCard(
                 label: "TOKENS",
-                value: formatTokens(stats.totalTokens),
+                value: Formatters.tokens(stats.totalTokens),
                 delta: formatTokenDelta(stats.tokenDeltaPercent),
                 deltaColor: stats.tokenDeltaPercent <= 0 ? .trendUp : .trendDown
             )
             StatCard(
                 label: "CACHE",
                 value: String(format: "%.0f%%", stats.cacheHitRate * 100),
-                delta: "saved " + String(format: "$%.2f", cacheSavings(stats)),
+                delta: "saved " + Formatters.cost(stats.cacheSavingsUSD),
                 deltaColor: .textFaint
             )
         }
@@ -38,16 +38,6 @@ struct SummaryCardsRow: View {
         return "\(sign)\(String(format: "%.0f%%", pct))"
     }
 
-    private func formatTokens(_ n: Int) -> String {
-        if n >= 1_000_000 { return String(format: "%.1fM", Double(n) / 1_000_000) }
-        if n >= 1_000 { return String(format: "%.0fk", Double(n) / 1_000) }
-        return "\(n)"
-    }
-
-    private func cacheSavings(_ stats: AggregatedStats) -> Double {
-        // Approx savings: cache read vs full input cost (sonnet: $3 vs $0.30/M = $2.70/M savings)
-        return Double(stats.cacheReadTokens) * 2.7 / 1_000_000
-    }
 }
 
 struct StatCard: View {

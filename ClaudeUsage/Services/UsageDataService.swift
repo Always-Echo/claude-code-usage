@@ -13,6 +13,24 @@ class UsageDataService: ObservableObject {
     private let parser = JSONLParser()
     private let calculator = CostCalculator()
 
+    // Fix 2: Static cached ISO8601 formatters
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private func parseDate(_ string: String) -> Date? {
+        UsageDataService.iso8601Formatter.date(from: string) ??
+        UsageDataService.iso8601FormatterNoFraction.date(from: string)
+    }
+
     init() {
         loadData()
         timer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
@@ -20,17 +38,27 @@ class UsageDataService: ObservableObject {
         }
     }
 
+    // Fix 1: Move file I/O off main thread using Task.detached
     func loadData() {
+        guard !isLoading else { return }
         isLoading = true
-        let files = resolver.resolveJSONLFiles()
-        allEntries = parser.parse(files: files)
-        var newStats: [TimeDimension: AggregatedStats] = [:]
-        for dim in TimeDimension.allCases {
-            newStats[dim] = aggregate(entries: allEntries, for: dim)
+        Task {
+            let files = await Task.detached(priority: .userInitiated) { [resolver] in
+                resolver.resolveJSONLFiles()
+            }.value
+            let entries = await Task.detached(priority: .userInitiated) { [parser] in
+                parser.parse(files: files)
+            }.value
+            // Back on MainActor
+            self.allEntries = entries
+            var newStats: [TimeDimension: AggregatedStats] = [:]
+            for dim in TimeDimension.allCases {
+                newStats[dim] = self.aggregate(entries: entries, for: dim)
+            }
+            self.stats = newStats
+            self.lastRefreshed = Date()
+            self.isLoading = false
         }
-        stats = newStats
-        lastRefreshed = Date()
-        isLoading = false
     }
 
     func refreshIfNeeded() {
@@ -41,14 +69,6 @@ class UsageDataService: ObservableObject {
     func aggregate(entries: [UsageEntry], for dimension: TimeDimension) -> AggregatedStats {
         let cal = Calendar.current
         let now = Date()
-        let formatter = ISO8601DateFormatter()
-
-        func parseDate(_ s: String) -> Date? {
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let d = formatter.date(from: s) { return d }
-            formatter.formatOptions = [.withInternetDateTime]
-            return formatter.date(from: s)
-        }
 
         func isInCurrentPeriod(_ date: Date) -> Bool {
             switch dimension {
@@ -90,6 +110,8 @@ class UsageDataService: ObservableObject {
         var sessions = Set<String>(), projects = Set<String>()
         var modelCosts: [String: (tokens: Int, cost: Double)] = [:]
         var dates: [Date] = []
+        // Fix 5: Accumulate cache savings using per-entry model pricing
+        var cacheSavings = 0.0
 
         for (e, d) in currentEntries {
             let cost = calculator.cost(for: e)
@@ -100,6 +122,8 @@ class UsageDataService: ObservableObject {
             let cr = usage?.cacheReadInputTokens ?? 0
             let cc = usage?.cacheCreationInputTokens ?? 0
             input += i; output += o; cacheRead += cr; cacheCreate += cc
+            // Fix 5: savings = cacheRead * (inputPrice - cacheReadPrice) per entry's model
+            cacheSavings += calculator.cacheSavings(for: e)
             if let s = e.sessionId { sessions.insert(s) }
             if let p = e.cwd { projects.insert(p) }
             let model = e.message?.model ?? "unknown"
@@ -133,8 +157,8 @@ class UsageDataService: ObservableObject {
                           costRatio: totalCost > 0 ? v.cost / totalCost : 0)
         }.sorted { $0.costUSD > $1.costUSD }
 
-        // Chart bars
-        let bars = makeChartBars(entries: entries, dimension: dimension, now: now, parseFn: parseDate)
+        // Fix 3: Chart bars with pre-parsed dates
+        let bars = makeChartBars(entries: entries, dimension: dimension, calendar: cal)
 
         return AggregatedStats(
             totalCostUSD: totalCost, totalTokens: totalTokens,
@@ -145,58 +169,87 @@ class UsageDataService: ObservableObject {
             sessionCount: sessions.count, projectCount: projects.count,
             activeDuration: activeDuration,
             modelBreakdowns: breakdowns, chartBars: bars,
-            dimensionLabel: dimension.periodLabel
+            dimensionLabel: dimension.periodLabel,
+            cacheSavingsUSD: cacheSavings
         )
     }
 
-    private func makeChartBars(entries: [UsageEntry], dimension: TimeDimension, now: Date,
-                                parseFn: (String) -> Date?) -> [PeriodBar] {
-        let cal = Calendar.current
+    // Fix 3 & 8: Extract periodBounds helper; pre-parse dates once; no force-unwraps
+    private func periodBounds(
+        offsetFromNow: Int,
+        dimension: TimeDimension,
+        calendar: Calendar,
+        now: Date
+    ) -> (start: Date, end: Date, label: String, isCurrent: Bool) {
+        let unit: Calendar.Component
+        switch dimension {
+        case .day:   unit = .day
+        case .week:  unit = .weekOfYear
+        case .month: unit = .month
+        case .year:  unit = .year
+        }
+
+        guard let periodDate = calendar.date(byAdding: unit, value: offsetFromNow, to: now) else {
+            return (now, now, "", false)
+        }
+
+        let start: Date
+        let end: Date
+        switch dimension {
+        case .day:
+            start = calendar.startOfDay(for: periodDate)
+            end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+        case .week:
+            var comps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: periodDate)
+            start = calendar.date(from: comps) ?? periodDate
+            end = calendar.date(byAdding: .weekOfYear, value: 1, to: start) ?? start
+        case .month:
+            var comps = calendar.dateComponents([.year, .month], from: periodDate)
+            start = calendar.date(from: comps) ?? periodDate
+            end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
+        case .year:
+            var comps = calendar.dateComponents([.year], from: periodDate)
+            start = calendar.date(from: comps) ?? periodDate
+            end = calendar.date(byAdding: .year, value: 1, to: start) ?? start
+        }
+
+        let label: String
+        switch dimension {
+        case .day:   label = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: periodDate) - 1]
+        case .week:  label = "W\(calendar.component(.weekOfYear, from: periodDate))"
+        case .month: label = calendar.shortMonthSymbols[calendar.component(.month, from: periodDate) - 1]
+        case .year:  label = "\(calendar.component(.year, from: periodDate))"
+        }
+
+        let isCurrent: Bool
+        switch dimension {
+        case .day:   isCurrent = calendar.isDateInToday(periodDate)
+        case .week:  isCurrent = calendar.isDate(periodDate, equalTo: now, toGranularity: .weekOfYear)
+        case .month: isCurrent = calendar.isDate(periodDate, equalTo: now, toGranularity: .month)
+        case .year:  isCurrent = calendar.isDate(periodDate, equalTo: now, toGranularity: .year)
+        }
+
+        return (start, end, label, isCurrent)
+    }
+
+    private func makeChartBars(entries: [UsageEntry], dimension: TimeDimension, calendar: Calendar) -> [PeriodBar] {
+        // Fix 3: Pre-parse all dates once — O(n) instead of O(n * barCount)
+        let dated: [(UsageEntry, Date)] = entries.compactMap { entry in
+            guard let date = parseDate(entry.timestamp) else { return nil }
+            return (entry, date)
+        }
+
+        let now = Date()
         var bars: [PeriodBar] = []
 
         for i in stride(from: dimension.barCount - 1, through: 0, by: -1) {
-            let offset = -i
-            let periodDate: Date
-            switch dimension {
-            case .day:   periodDate = cal.date(byAdding: .day, value: offset, to: now)!
-            case .week:  periodDate = cal.date(byAdding: .weekOfYear, value: offset, to: now)!
-            case .month: periodDate = cal.date(byAdding: .month, value: offset, to: now)!
-            case .year:  periodDate = cal.date(byAdding: .year, value: offset, to: now)!
-            }
-
-            func inPeriod(_ d: Date) -> Bool {
-                switch dimension {
-                case .day:   return cal.isDate(d, inSameDayAs: periodDate)
-                case .week:  return cal.isDate(d, equalTo: periodDate, toGranularity: .weekOfYear)
-                case .month: return cal.isDate(d, equalTo: periodDate, toGranularity: .month)
-                case .year:  return cal.isDate(d, equalTo: periodDate, toGranularity: .year)
-                }
-            }
-
-            var inp = 0, out = 0
-            for e in entries {
-                guard let d = parseFn(e.timestamp), inPeriod(d) else { continue }
-                inp += e.message?.usage?.inputTokens ?? 0
-                out += e.message?.usage?.outputTokens ?? 0
-            }
-
-            let label: String
-            switch dimension {
-            case .day:   label = cal.shortWeekdaySymbols[cal.component(.weekday, from: periodDate) - 1]
-            case .week:  label = "W\(cal.component(.weekOfYear, from: periodDate))"
-            case .month: label = cal.shortMonthSymbols[cal.component(.month, from: periodDate) - 1]
-            case .year:  label = "\(cal.component(.year, from: periodDate))"
-            }
-
-            let isCurrent: Bool
-            switch dimension {
-            case .day:   isCurrent = cal.isDateInToday(periodDate)
-            case .week:  isCurrent = cal.isDate(periodDate, equalTo: now, toGranularity: .weekOfYear)
-            case .month: isCurrent = cal.isDate(periodDate, equalTo: now, toGranularity: .month)
-            case .year:  isCurrent = cal.isDate(periodDate, equalTo: now, toGranularity: .year)
-            }
-
-            bars.append(PeriodBar(label: label, inputTokens: inp, outputTokens: out, isCurrentPeriod: isCurrent))
+            let (periodStart, periodEnd, label, isCurrent) = periodBounds(
+                offsetFromNow: -i, dimension: dimension, calendar: calendar, now: now
+            )
+            let periodEntries = dated.filter { $0.1 >= periodStart && $0.1 < periodEnd }
+            let inputTokens  = periodEntries.reduce(0) { $0 + ($1.0.message?.usage?.inputTokens ?? 0) }
+            let outputTokens = periodEntries.reduce(0) { $0 + ($1.0.message?.usage?.outputTokens ?? 0) }
+            bars.append(PeriodBar(label: label, inputTokens: inputTokens, outputTokens: outputTokens, isCurrentPeriod: isCurrent))
         }
         return bars
     }

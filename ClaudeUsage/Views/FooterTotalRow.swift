@@ -11,7 +11,7 @@ struct FooterTotalRow: View {
                     .font(.system(size: 10, weight: .medium))
                     .textCase(.uppercase)
                     .foregroundColor(.textFaint)
-                Text(formatTokens(stats.totalTokens) + " tokens")
+                Text(Formatters.tokens(stats.totalTokens) + " tokens")
                     .font(.system(size: 10).monospacedDigit())
                     .foregroundColor(.textFaint)
             }
@@ -24,9 +24,4 @@ struct FooterTotalRow: View {
         .padding(.vertical, DS.spacing8)
     }
 
-    private func formatTokens(_ n: Int) -> String {
-        if n >= 1_000_000 { return String(format: "%.1fM", Double(n) / 1_000_000) }
-        if n >= 1_000 { return String(format: "%.0fk", Double(n) / 1_000) }
-        return "\(n)"
-    }
 }

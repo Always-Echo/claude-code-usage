@@ -9,7 +9,7 @@ struct SessionsInfoRow: View {
             Spacer()
             InfoItem(icon: "folder.fill", label: "Projects", value: "\(stats.projectCount)")
             Spacer()
-            InfoItem(icon: "clock", label: "Active", value: formatDuration(stats.activeDuration))
+            InfoItem(icon: "arrow.left.and.right", label: "Span", value: formatDuration(stats.activeDuration))
         }
         .padding(.horizontal, DS.spacing12)
         .padding(.vertical, DS.spacing8)
