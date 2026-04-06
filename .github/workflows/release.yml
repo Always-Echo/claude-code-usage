@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Archive
+        run: xcodebuild archive -scheme ClaudeUsage -archivePath build/ClaudeUsage.xcarchive -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
+      - name: Export archive
+        run: xcodebuild -exportArchive -archivePath build/ClaudeUsage.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
+
+      - name: Ad-hoc codesign
+        run: codesign --deep --force --sign - "build/export/ClaudeUsage.app"
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Create DMG
+        run: >
+          create-dmg
+          --volname "ClaudeUsage"
+          --window-pos 200 120
+          --window-size 600 400
+          --icon-size 100
+          --icon "ClaudeUsage.app" 175 120
+          --hide-extension "ClaudeUsage.app"
+          --app-drop-link 425 120
+          "ClaudeUsage-${{ github.ref_name }}.dmg"
+          "build/export/"
+
+      - name: Create ZIP
+        run: cd build/export && zip -r "../../ClaudeUsage-${{ github.ref_name }}.app.zip" ClaudeUsage.app
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create ${{ github.ref_name }}
+          "ClaudeUsage-${{ github.ref_name }}.dmg"
+          "ClaudeUsage-${{ github.ref_name }}.app.zip"
+          --title "ClaudeUsage ${{ github.ref_name }}"
+          --notes "Download ClaudeUsage-*.dmg for easy installation, or ClaudeUsage-*.app.zip to run directly.\n\n**First launch:** Right-click → Open → Open (to bypass Gatekeeper)"

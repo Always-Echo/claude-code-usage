@@ -22,8 +22,9 @@ struct JSONLParser {
                 // Deduplication
                 let msgId = entry.message?.id
                 let reqId = entry.requestId
-                if let m = msgId, let r = reqId {
-                    let key = "\(m):\(r)"
+                // Only skip if we have at least one identifier to deduplicate on
+                if msgId != nil || reqId != nil {
+                    let key = "\(msgId ?? "_"):\(reqId ?? "_")"
                     if seen.contains(key) { continue }
                     seen.insert(key)
                 }
