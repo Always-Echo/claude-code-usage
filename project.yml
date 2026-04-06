@@ -1,0 +1,38 @@
+name: ClaudeUsage
+options:
+  bundleIdPrefix: com.liujun
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  ClaudeUsage:
+    type: application
+    platform: macOS
+    sources:
+      - ClaudeUsage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.liujun.ClaudeUsage
+        SWIFT_VERSION: 5.9
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        INFOPLIST_FILE: ClaudeUsage/Info.plist
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+
+  ClaudeUsageTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ClaudeUsageTests
+    dependencies:
+      - target: ClaudeUsage
+    settings:
+      base:
+        SWIFT_VERSION: 5.9
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
