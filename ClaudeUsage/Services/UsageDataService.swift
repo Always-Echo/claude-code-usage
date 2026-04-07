@@ -200,16 +200,16 @@ class UsageDataService: ObservableObject {
             start = calendar.startOfDay(for: periodDate)
             end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
         case .week:
-            var comps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: periodDate)
-            start = calendar.date(from: comps) ?? periodDate
+            let weekComps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: periodDate)
+            start = calendar.date(from: weekComps) ?? periodDate
             end = calendar.date(byAdding: .weekOfYear, value: 1, to: start) ?? start
         case .month:
-            var comps = calendar.dateComponents([.year, .month], from: periodDate)
-            start = calendar.date(from: comps) ?? periodDate
+            let monthComps = calendar.dateComponents([.year, .month], from: periodDate)
+            start = calendar.date(from: monthComps) ?? periodDate
             end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
         case .year:
-            var comps = calendar.dateComponents([.year], from: periodDate)
-            start = calendar.date(from: comps) ?? periodDate
+            let yearComps = calendar.dateComponents([.year], from: periodDate)
+            start = calendar.date(from: yearComps) ?? periodDate
             end = calendar.date(byAdding: .year, value: 1, to: start) ?? start
         }
 
