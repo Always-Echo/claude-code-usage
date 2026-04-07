@@ -1,5 +1,7 @@
 # ClaudeUsage
 
+**English** | [中文](#中文)
+
 A macOS menu bar app that tracks your [Claude Code](https://claude.ai/code) token usage and costs — without leaving your desktop.
 
 ![macOS](https://img.shields.io/badge/macOS-13.0%2B-black?style=flat-square&logo=apple)
@@ -10,168 +12,206 @@ A macOS menu bar app that tracks your [Claude Code](https://claude.ai/code) toke
 
 ## Features
 
-- **4 time dimensions** — switch between daily, weekly, monthly, and yearly views
-- **Cost tracking** — total USD spent per period with delta vs. previous period
-- **Token breakdown** — input, output, cache read, and cache write tokens
+- **4 time dimensions** — daily, weekly, monthly, and yearly views
+- **Cost tracking** — total USD spent with delta vs. previous period
+- **Token breakdown** — input, output, cache read, and cache write
 - **Model breakdown** — per-model usage and cost with proportional bars
-- **7-day bar chart** — stacked input/output chart with current period highlighted
-- **Cache savings** — estimated cost saved by prompt caching, calculated per model
-- **Session stats** — number of sessions, projects, and active time span
-- **Auto-refresh** — data reloads every 5 minutes in the background
-- **Zero dependencies** — reads local JSONL files directly, no network required
-
----
-
-## Screenshots
-
-> Coming soon — contributions welcome!
+- **Bar chart** — stacked input/output chart with current period highlighted
+- **Cache savings** — estimated savings from prompt caching, per model
+- **Auto-refresh** — reloads every 5 minutes, zero network required
 
 ---
 
 ## Installation
 
-### Option 1: Download DMG (recommended)
+### Option 1: DMG (recommended)
 
-1. Go to [Releases](../../releases/latest)
-2. Download `ClaudeUsage-vX.X.X.dmg`
-3. Open the DMG and drag **ClaudeUsage** to your **Applications** folder
-4. Double-click to launch
+1. Download `ClaudeUsage-vX.X.X.dmg` from [Releases](../../releases/latest)
+2. Open the DMG and drag **ClaudeUsage** to **Applications**
+3. Launch the app
 
-> **First launch on macOS:** Apple will block apps from unidentified developers by default.
-> To open ClaudeUsage:
-> 1. **Right-click** (or Control-click) the app icon
-> 2. Select **Open**
-> 3. Click **Open** in the dialog that appears
->
-> You only need to do this once.
+> **First launch:** macOS will block unidentified apps by default.
+> Right-click the app → **Open** → **Open**. You only need to do this once.
 
-### Option 2: Download ZIP
+### Option 2: ZIP
 
-1. Go to [Releases](../../releases/latest)
-2. Download `ClaudeUsage-vX.X.X.app.zip`
-3. Unzip and move `ClaudeUsage.app` anywhere you like
-4. Follow the same first-launch steps above
+Download `ClaudeUsage-vX.X.X.app.zip` from [Releases](../../releases/latest), unzip, and run. Same first-launch step applies.
 
 ### Option 3: Build from Source
 
-Requirements: **Xcode 15+** and **xcodegen** (`brew install xcodegen`)
+Requires **Xcode 16+** and **xcodegen** (`brew install xcodegen`).
 
 ```bash
-git clone https://github.com/your-username/claude-code-usage.git
+git clone https://github.com/Always-Echo/claude-code-usage.git
 cd claude-code-usage
 xcodegen generate
 open ClaudeUsage.xcodeproj
 ```
 
-Then press `⌘R` in Xcode to build and run.
+Press `⌘R` in Xcode to build and run.
 
 ---
 
 ## How It Works
 
-ClaudeUsage reads the same local files that Claude Code writes during every session — no API calls, no account login required.
+ClaudeUsage reads the JSONL files Claude Code writes locally — no API calls, no login.
 
-### Data source
-
-Claude Code stores usage records as JSONL files on your Mac:
-
+**Data paths scanned:**
 ```
-~/.claude/projects/**/*.jsonl          # default path
-~/.config/claude/projects/**/*.jsonl   # XDG path
-$CLAUDE_CONFIG_DIR/**/*.jsonl          # custom path (if set)
+~/.claude/projects/**/*.jsonl
+~/.config/claude/projects/**/*.jsonl
+$CLAUDE_CONFIG_DIR/**/*.jsonl
 ```
 
-Each line is a JSON record containing:
+**Pipeline:** Discover → Parse → Deduplicate → Aggregate → Render
 
-```json
-{
-  "timestamp": "2026-04-07T10:30:00Z",
-  "sessionId": "abc123",
-  "message": {
-    "model": "claude-opus-4-20250514",
-    "usage": {
-      "input_tokens": 1200,
-      "output_tokens": 340,
-      "cache_creation_input_tokens": 800,
-      "cache_read_input_tokens": 2400
-    }
-  },
-  "costUSD": 0.0124
-}
+Cost uses the `costUSD` field when present; otherwise falls back to a built-in pricing table (supports fast-mode 5× multiplier).
+
+**Architecture:**
 ```
-
-### Processing pipeline
-
-1. **Discover** — scan all three paths for `*.jsonl` files
-2. **Parse** — decode each line, skip malformed entries and internal synthetic messages
-3. **Deduplicate** — drop duplicate records using `message.id + requestId` as key
-4. **Aggregate** — group entries by time period (day / week / month / year)
-5. **Cost** — use the pre-calculated `costUSD` field when available; fall back to a built-in pricing table for older entries
-6. **Render** — update the SwiftUI popover panel
-
-### Architecture
-
-```
-ClaudeUsageApp          ← @main entry point, AppDelegate
-StatusBarController     ← NSStatusItem + NSPopover lifecycle
-UsageDataService        ← ObservableObject, 5-min Timer, aggregation
-  ├── ClaudePathResolver   resolves all JSONL file paths
-  ├── JSONLParser          parses + deduplicates entries
-  └── CostCalculator       cost from costUSD or pricing table
+StatusBarController     NSStatusItem + NSPopover
+UsageDataService        aggregation, 5-min timer
+  ├── ClaudePathResolver
+  ├── JSONLParser
+  └── CostCalculator
 Views/
-  ├── UsagePopoverView     root panel (320pt wide)
-  ├── DimensionTabBar      日 / 周 / 月 / 年 tabs
-  ├── SummaryCardsRow      cost · tokens · cache rate cards
-  ├── BarChartView         stacked bar chart
-  ├── TokenBreakdownGrid   input / output / cache breakdown
-  ├── ModelBreakdownList   per-model cost rows
-  ├── SessionsInfoRow      sessions · projects · span
-  └── FooterTotalRow       period total
+  ├── UsagePopoverView  320pt panel
+  ├── DimensionTabBar   日/周/月/年
+  ├── SummaryCardsRow   cost · tokens · cache rate
+  ├── BarChartView      stacked bar chart
+  ├── TokenBreakdownGrid
+  ├── ModelBreakdownList
+  ├── SessionsInfoRow
+  └── FooterTotalRow
 ```
-
----
-
-## Usage
-
-1. Launch **ClaudeUsage** — a bar chart icon (▪︎) appears in your menu bar
-2. Click the icon to open the usage panel
-3. Use the **日 / 周 / 月 / 年** tabs to switch time dimensions
-4. Click anywhere outside the panel to close it
-
-The panel refreshes automatically every 5 minutes. The timestamp in the top-right corner shows when data was last loaded.
 
 ---
 
 ## Supported Models
 
-Built-in pricing table covers:
-
 | Model | Input | Output | Cache Write | Cache Read |
 |-------|-------|--------|-------------|------------|
-| claude-opus-4 | $15 / 1M | $75 / 1M | $18.75 / 1M | $1.50 / 1M |
-| claude-sonnet-4 | $3 / 1M | $15 / 1M | $3.75 / 1M | $0.30 / 1M |
-| claude-haiku-4-5 | $0.80 / 1M | $4 / 1M | $1 / 1M | $0.08 / 1M |
-| claude-haiku-3-5 | $0.80 / 1M | $4 / 1M | $1 / 1M | $0.08 / 1M |
+| claude-opus-4 | $15/1M | $75/1M | $18.75/1M | $1.50/1M |
+| claude-sonnet-4 | $3/1M | $15/1M | $3.75/1M | $0.30/1M |
+| claude-haiku-4-5 / 3-5 | $0.80/1M | $4/1M | $1/1M | $0.08/1M |
 
-Unknown models fall back to Sonnet pricing. When a `costUSD` field is present in the JSONL record, it is always used as-is.
+Unknown models fall back to Sonnet pricing. Fast mode applies a 5× multiplier.
 
 ---
 
 ## Requirements
 
 - macOS 13.0 Ventura or later
-- Claude Code installed and used at least once (so local data files exist)
+- Claude Code installed and used at least once
 
 ---
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first.
-
-To add support for a new model's pricing, edit `ClaudeUsage/Services/CostCalculator.swift`.
+PRs welcome. To add a new model's pricing, edit `ClaudeUsage/Services/CostCalculator.swift`.
 
 ---
 
 ## License
+
+MIT
+
+---
+
+<a name="中文"></a>
+
+# ClaudeUsage
+
+[English](#) | **中文**
+
+一款 macOS 菜单栏应用，实时追踪 [Claude Code](https://claude.ai/code) 的 token 用量与费用，无需离开桌面。
+
+---
+
+## 功能特性
+
+- **4 个时间维度** — 日、周、月、年视图自由切换
+- **费用追踪** — 当前周期总花费及与上一周期的对比
+- **Token 明细** — Input、Output、Cache Read、Cache Write 分类展示
+- **模型明细** — 各模型用量与费用，附比例进度条
+- **柱状图** — Input/Output 堆叠图，当前周期高亮显示
+- **缓存节省** — 按模型精确计算 Prompt Cache 节省的费用
+- **自动刷新** — 每 5 分钟后台刷新，无需网络
+
+---
+
+## 安装方式
+
+### 方式一：DMG 安装包（推荐）
+
+1. 从 [Releases](../../releases/latest) 下载 `ClaudeUsage-vX.X.X.dmg`
+2. 打开 DMG，将 **ClaudeUsage** 拖入 **Applications（应用程序）**文件夹
+3. 双击启动
+
+> **首次启动提示：** macOS 会拦截未经认证的应用。
+> 右键点击应用图标 → **打开** → **打开**，仅需操作一次。
+
+### 方式二：ZIP 压缩包
+
+从 [Releases](../../releases/latest) 下载 `ClaudeUsage-vX.X.X.app.zip`，解压后直接运行，首次启动同上。
+
+### 方式三：从源码构建
+
+需要 **Xcode 16+** 和 **xcodegen**（`brew install xcodegen`）。
+
+```bash
+git clone https://github.com/Always-Echo/claude-code-usage.git
+cd claude-code-usage
+xcodegen generate
+open ClaudeUsage.xcodeproj
+```
+
+在 Xcode 中按 `⌘R` 构建运行。
+
+---
+
+## 实现原理
+
+ClaudeUsage 直接读取 Claude Code 在本地写入的 JSONL 文件，无需 API 调用，无需登录账号。
+
+**数据路径：**
+```
+~/.claude/projects/**/*.jsonl
+~/.config/claude/projects/**/*.jsonl
+$CLAUDE_CONFIG_DIR/**/*.jsonl
+```
+
+**处理流程：** 发现文件 → 解析 → 去重 → 按时间聚合 → 渲染
+
+费用计算优先使用记录中的 `costUSD` 字段；若缺失则使用内置定价表（支持 Fast 模式 5 倍费率）。
+
+---
+
+## 支持的模型
+
+| 模型 | Input | Output | Cache Write | Cache Read |
+|------|-------|--------|-------------|------------|
+| claude-opus-4 | $15/1M | $75/1M | $18.75/1M | $1.50/1M |
+| claude-sonnet-4 | $3/1M | $15/1M | $3.75/1M | $0.30/1M |
+| claude-haiku-4-5 / 3-5 | $0.80/1M | $4/1M | $1/1M | $0.08/1M |
+
+未知模型默认使用 Sonnet 定价，Fast 模式乘以 5 倍费率。
+
+---
+
+## 系统要求
+
+- macOS 13.0 Ventura 及以上
+- 已安装 Claude Code 并至少使用过一次（本地需有数据文件）
+
+---
+
+## 参与贡献
+
+欢迎提交 PR。如需新增模型定价，修改 `ClaudeUsage/Services/CostCalculator.swift` 即可。
+
+---
+
+## 许可证
 
 MIT
