@@ -18,40 +18,62 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Archive
-        run: xcodebuild archive -scheme ClaudeUsage -archivePath build/ClaudeUsage.xcarchive -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme ClaudeUsage \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
-      - name: Export archive
-        run: xcodebuild -exportArchive -archivePath build/ClaudeUsage.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
+      - name: Locate built app
+        id: locate
+        run: |
+          APP_PATH=$(find build/DerivedData -name "ClaudeUsage.app" -type d | head -1)
+          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found app at: $APP_PATH"
 
       - name: Ad-hoc codesign
-        run: codesign --deep --force --sign - "build/export/ClaudeUsage.app"
+        run: codesign --deep --force --sign - "${{ steps.locate.outputs.app_path }}"
 
       - name: Install create-dmg
         run: brew install create-dmg
 
       - name: Create DMG
-        run: >
-          create-dmg
-          --volname "ClaudeUsage"
-          --window-pos 200 120
-          --window-size 600 400
-          --icon-size 100
-          --icon "ClaudeUsage.app" 175 120
-          --hide-extension "ClaudeUsage.app"
-          --app-drop-link 425 120
-          "ClaudeUsage-${{ github.ref_name }}.dmg"
-          "build/export/"
+        run: |
+          mkdir -p dist
+          cp -R "${{ steps.locate.outputs.app_path }}" dist/
+          create-dmg \
+            --volname "ClaudeUsage" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "ClaudeUsage.app" 175 120 \
+            --hide-extension "ClaudeUsage.app" \
+            --app-drop-link 425 120 \
+            "ClaudeUsage-${{ github.ref_name }}.dmg" \
+            "dist/"
 
       - name: Create ZIP
-        run: cd build/export && zip -r "../../ClaudeUsage-${{ github.ref_name }}.app.zip" ClaudeUsage.app
+        run: |
+          cd dist
+          zip -r "../ClaudeUsage-${{ github.ref_name }}.app.zip" ClaudeUsage.app
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create ${{ github.ref_name }}
-          "ClaudeUsage-${{ github.ref_name }}.dmg"
-          "ClaudeUsage-${{ github.ref_name }}.app.zip"
-          --title "ClaudeUsage ${{ github.ref_name }}"
-          --notes "Download ClaudeUsage-*.dmg for easy installation, or ClaudeUsage-*.app.zip to run directly.\n\n**First launch:** Right-click → Open → Open (to bypass Gatekeeper)"
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "ClaudeUsage-${{ github.ref_name }}.dmg" \
+            "ClaudeUsage-${{ github.ref_name }}.app.zip" \
+            --title "ClaudeUsage ${{ github.ref_name }}" \
+            --notes "## Installation
+
+          **Option 1 — DMG (recommended):** Download \`ClaudeUsage-${{ github.ref_name }}.dmg\`, open it, drag ClaudeUsage to Applications.
+
+          **Option 2 — ZIP:** Download \`ClaudeUsage-${{ github.ref_name }}.app.zip\`, unzip and run.
+
+          **First launch:** Right-click the app → Open → Open (bypasses Gatekeeper, one-time only)."
