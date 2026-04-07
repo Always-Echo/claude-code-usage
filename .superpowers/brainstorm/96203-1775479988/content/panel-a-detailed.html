@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel A Detailed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: -apple-system, 'SF Pro Display', sans-serif;
+    color: #efefef;
+    padding: 40px;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .panel {
+    width: 320px;
+    background: #171717;
+    border: 1px solid #2e2e2e;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    padding: 13px 16px 11px;
+    border-bottom: 1px solid #242424;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fafafa;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    background: #3ecf8e;
+    border-radius: 50%;
+    box-shadow: 0 0 7px #3ecf8e88;
+  }
+  .refresh-info {
+    font-size: 10px;
+    color: #363636;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #242424;
+    padding: 0 16px;
+  }
+  .tab {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 9px 12px;
+    color: #4d4d4d;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    letter-spacing: 0.3px;
+  }
+  .tab.active {
+    color: #3ecf8e;
+    border-bottom-color: #3ecf8e;
+  }
+
+  /* Summary cards */
+  .summary {
+    display: flex;
+    padding: 12px 14px;
+    gap: 8px;
+    border-bottom: 1px solid #242424;
+  }
+  .stat-card {
+    flex: 1;
+    background: #1e1e1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 9px;
+    padding: 9px 10px;
+  }
+  .slabel {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+    margin-bottom: 5px;
+  }
+  .sval {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fafafa;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .sval.green { color: #3ecf8e; }
+  .sdelta {
+    font-size: 10px;
+    color: #3ecf8e;
+    margin-top: 4px;
+    display: flex; align-items: center; gap: 2px;
+  }
+  .sdelta.down { color: #f87171; }
+  .sdelta.neutral { color: #4d4d4d; }
+
+  /* Bar chart */
+  .chart-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid #242424;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .chart-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+  }
+  .chart-legend {
+    display: flex; gap: 10px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 9px; color: #4d4d4d;
+  }
+  .legend-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    height: 52px;
+  }
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar-stack {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+    gap: 0;
+  }
+  .bar-seg {
+    width: 100%;
+  }
+  .bar-seg.input  { background: #1a5c40; }
+  .bar-seg.output { background: #3ecf8e; }
+  .bar-seg.today .bar-seg.output { box-shadow: 0 0 8px rgba(62,207,142,0.5); }
+  .bar-col.today .bar-seg.output { background: #3ecf8e; box-shadow: 0 -2px 8px rgba(62,207,142,0.4); }
+  .bar-col.today .bar-seg.input  { background: #2a8c5e; }
+  .bar-day {
+    font-size: 8px;
+    color: #363636;
+    letter-spacing: 0.3px;
+  }
+  .bar-col.today .bar-day { color: #3ecf8e; }
+
+  /* Token breakdown */
+  .token-section {
+    padding: 10px 14px;
+    border-bottom: 1px solid #242424;
+  }
+  .section-title {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+    margin-bottom: 8px;
+  }
+  .token-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .token-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .token-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .token-name {
+    font-size: 10px;
+    color: #898989;
+    flex: 1;
+  }
+  .token-val {
+    font-size: 10px;
+    color: #b4b4b4;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Model breakdown */
+  .model-section {
+    padding: 10px 14px;
+    border-bottom: 1px solid #242424;
+  }
+  .model-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e1e1e;
+    gap: 8px;
+  }
+  .model-row:last-child { border-bottom: none; }
+  .model-name {
+    font-size: 11px;
+    color: #b4b4b4;
+    flex: 1;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 10px;
+  }
+  .model-tokens {
+    font-size: 10px;
+    color: #4d4d4d;
+    font-variant-numeric: tabular-nums;
+    min-width: 38px;
+    text-align: right;
+  }
+  .model-bar-wrap {
+    width: 36px;
+    height: 3px;
+    background: #242424;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .model-bar-fill {
+    height: 100%;
+    background: #3ecf8e;
+    border-radius: 2px;
+  }
+  .model-cost {
+    font-size: 11px;
+    color: #3ecf8e;
+    font-variant-numeric: tabular-nums;
+    min-width: 42px;
+    text-align: right;
+    font-weight: 500;
+  }
+
+  /* Sessions info */
+  .sessions-section {
+    padding: 8px 14px;
+    border-bottom: 1px solid #242424;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .session-item {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .session-icon {
+    font-size: 10px;
+  }
+  .session-label {
+    font-size: 10px;
+    color: #4d4d4d;
+  }
+  .session-val {
+    font-size: 10px;
+    color: #898989;
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 9px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ftotal-label {
+    font-size: 10px;
+    color: #4d4d4d;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .ftotal-tokens {
+    font-size: 10px;
+    color: #363636;
+  }
+  .fval {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3ecf8e;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <div class="section-label">方案 A 精细版 — 「日」维度预览</div>
+  <div class="panel">
+    <div class="header">
+      <div class="title">
+        <span class="live-dot"></span>
+        Claude Usage
+      </div>
+      <div class="refresh-info">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#363636" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        5m ago
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">日</div>
+      <div class="tab">周</div>
+      <div class="tab">月</div>
+      <div class="tab">年</div>
+    </div>
+
+    <!-- 3 summary cards -->
+    <div class="summary">
+      <div class="stat-card">
+        <div class="slabel">花费</div>
+        <div class="sval green">$0.84</div>
+        <div class="sdelta">↑ +$0.21</div>
+      </div>
+      <div class="stat-card">
+        <div class="slabel">Total Tokens</div>
+        <div class="sval">312k</div>
+        <div class="sdelta down">↓ -12%</div>
+      </div>
+      <div class="stat-card">
+        <div class="slabel">Cache Rate</div>
+        <div class="sval">41%</div>
+        <div class="sdelta neutral">saved $0.18</div>
+      </div>
+    </div>
+
+    <!-- Bar chart: 7-day cost -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-label">近 7 日 Token 用量</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#3ecf8e"></div>Output</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1a5c40"></div>Input</div>
+        </div>
+      </div>
+      <div class="bars">
+        <div class="bar-col">
+          <div class="bar-stack" style="height:28px">
+            <div class="bar-seg input"  style="height:18px"></div>
+            <div class="bar-seg output" style="height:10px"></div>
+          </div>
+          <div class="bar-day">M</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:36px">
+            <div class="bar-seg input"  style="height:24px"></div>
+            <div class="bar-seg output" style="height:12px"></div>
+          </div>
+          <div class="bar-day">T</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:44px">
+            <div class="bar-seg input"  style="height:28px"></div>
+            <div class="bar-seg output" style="height:16px"></div>
+          </div>
+          <div class="bar-day">W</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:30px">
+            <div class="bar-seg input"  style="height:20px"></div>
+            <div class="bar-seg output" style="height:10px"></div>
+          </div>
+          <div class="bar-day">T</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:38px">
+            <div class="bar-seg input"  style="height:25px"></div>
+            <div class="bar-seg output" style="height:13px"></div>
+          </div>
+          <div class="bar-day">F</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-stack" style="height:20px">
+            <div class="bar-seg input"  style="height:13px"></div>
+            <div class="bar-seg output" style="height:7px"></div>
+          </div>
+          <div class="bar-day">S</div>
+        </div>
+        <div class="bar-col today">
+          <div class="bar-stack" style="height:48px">
+            <div class="bar-seg input"  style="height:30px"></div>
+            <div class="bar-seg output" style="height:18px"></div>
+          </div>
+          <div class="bar-day">T</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token breakdown grid -->
+    <div class="token-section">
+      <div class="section-title">Token 明细</div>
+      <div class="token-grid">
+        <div class="token-item">
+          <div class="token-dot" style="background:#3ecf8e"></div>
+          <div class="token-name">Input</div>
+          <div class="token-val">98,240</div>
+        </div>
+        <div class="token-item">
+          <div class="token-dot" style="background:#1a5c40"></div>
+          <div class="token-name">Output</div>
+          <div class="token-val">24,180</div>
+        </div>
+        <div class="token-item">
+          <div class="token-dot" style="background:#363636"></div>
+          <div class="token-name">Cache Read</div>
+          <div class="token-val">128,400</div>
+        </div>
+        <div class="token-item">
+          <div class="token-dot" style="background:#2a2a2a"></div>
+          <div class="token-name">Cache Write</div>
+          <div class="token-val">61,660</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model breakdown -->
+    <div class="model-section">
+      <div class="section-title">模型明细</div>
+      <div class="model-row">
+        <div class="model-name">claude-opus-4</div>
+        <div class="model-tokens">180k tok</div>
+        <div class="model-bar-wrap"><div class="model-bar-fill" style="width:85%"></div></div>
+        <div class="model-cost">$0.61</div>
+      </div>
+      <div class="model-row">
+        <div class="model-name">claude-sonnet-4</div>
+        <div class="model-tokens">132k tok</div>
+        <div class="model-bar-wrap"><div class="model-bar-fill" style="width:52%;opacity:0.5"></div></div>
+        <div class="model-cost">$0.23</div>
+      </div>
+    </div>
+
+    <!-- Sessions -->
+    <div class="sessions-section">
+      <div class="session-item">
+        <span class="session-icon">⚡</span>
+        <span class="session-label">Sessions</span>
+        <span class="session-val">7</span>
+      </div>
+      <div class="session-item">
+        <span class="session-icon">📁</span>
+        <span class="session-label">Projects</span>
+        <span class="session-val">3</span>
+      </div>
+      <div class="session-item">
+        <span class="session-icon">🕐</span>
+        <span class="session-label">Active</span>
+        <span class="session-val">2h 14m</span>
+      </div>
+    </div>
+
+    <!-- Footer total -->
+    <div class="footer">
+      <div>
+        <div class="ftotal-label">今日合计</div>
+        <div class="ftotal-tokens">312,480 tokens</div>
+      </div>
+      <div class="fval">$0.84</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: -apple-system, 'SF Pro Display', sans-serif;
+    color: #efefef;
+    padding: 32px;
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .label-top {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #898989;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  /* ── PANEL A ── */
+  .panel-a {
+    width: 300px;
+    background: #171717;
+    border: 1px solid #2e2e2e;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .panel-a .header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #242424;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-a .header .title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fafafa;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .panel-a .header .title .dot {
+    width: 7px; height: 7px;
+    background: #3ecf8e;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #3ecf8e;
+  }
+  .panel-a .header .refresh {
+    font-size: 11px; color: #4d4d4d;
+  }
+  .panel-a .tabs {
+    display: flex;
+    border-bottom: 1px solid #242424;
+    padding: 0 16px;
+    gap: 2px;
+  }
+  .panel-a .tab {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 10px;
+    color: #898989;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    letter-spacing: 0.3px;
+  }
+  .panel-a .tab.active {
+    color: #3ecf8e;
+    border-bottom-color: #3ecf8e;
+  }
+
+  /* summary row */
+  .panel-a .summary {
+    display: flex;
+    padding: 14px 16px;
+    gap: 8px;
+    border-bottom: 1px solid #242424;
+  }
+  .panel-a .stat-card {
+    flex: 1;
+    background: #1e1e1e;
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+  .panel-a .stat-card .slabel {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+    margin-bottom: 4px;
+  }
+  .panel-a .stat-card .sval {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fafafa;
+    font-variant-numeric: tabular-nums;
+  }
+  .panel-a .stat-card .sval.green { color: #3ecf8e; }
+  .panel-a .stat-card .sdelta {
+    font-size: 10px;
+    color: #3ecf8e;
+    margin-top: 2px;
+  }
+  .panel-a .stat-card .sdelta.down { color: #f87171; }
+
+  /* mini bar chart */
+  .panel-a .chart-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid #242424;
+  }
+  .panel-a .chart-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4d4d4d;
+    margin-bottom: 8px;
+  }
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 44px;
+  }
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    background: #2e2e2e;
+    transition: background 0.2s;
+  }
+  .bar.today { background: #3ecf8e; box-shadow: 0 0 8px rgba(62,207,142,0.4); }
+  .bar.high { background: #1a5c40; }
+  .bar.mid { background: #1a3d2e; }
+  .bar-day { font-size: 8px; color: #4d4d4d; }
+
+  /* model list */
+  .panel-a .model-section {
+    padding: 10px 16px 14px;
+  }
+  .panel-a .model-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e1e1e;
+    gap: 8px;
+  }
+  .panel-a .model-row:last-child { border-bottom: none; }
+  .panel-a .model-name {
+    font-size: 11px;
+    color: #b4b4b4;
+    flex: 1;
+    font-family: 'SF Mono', monospace;
+  }
+  .panel-a .model-tokens {
+    font-size: 11px;
+    color: #898989;
+    font-variant-numeric: tabular-nums;
+  }
+  .panel-a .model-cost {
+    font-size: 11px;
+    color: #3ecf8e;
+    font-variant-numeric: tabular-nums;
+    min-width: 44px;
+    text-align: right;
+  }
+  .panel-a .model-bar-wrap {
+    width: 40px;
+    height: 3px;
+    background: #242424;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .panel-a .model-bar-fill {
+    height: 100%;
+    background: #3ecf8e;
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+
+  .panel-a .footer {
+    padding: 8px 16px;
+    border-top: 1px solid #242424;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-a .footer .ftotal {
+    font-size: 11px;
+    color: #4d4d4d;
+  }
+  .panel-a .footer .fval {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3ecf8e;
+  }
+
+  /* ── PANEL B ── */
+  .panel-b {
+    width: 280px;
+    background: #0f0f0f;
+    border: 1px solid #363636;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .panel-b .bheader {
+    padding: 12px 14px;
+    border-bottom: 1px solid #1e1e1e;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-b .bheader .btitle {
+    font-size: 12px; font-weight: 600; color: #fafafa;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .panel-b .bheader .btitle svg { width:14px; height:14px; }
+  .panel-b .btabs {
+    display: flex;
+    background: #171717;
+    margin: 10px 12px;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .panel-b .btab {
+    flex: 1; text-align: center;
+    font-size: 11px; font-weight: 500;
+    padding: 5px 0;
+    border-radius: 6px;
+    color: #4d4d4d;
+    cursor: pointer;
+  }
+  .panel-b .btab.active {
+    background: #242424;
+    color: #fafafa;
+  }
+  /* big number */
+  .panel-b .big-cost {
+    text-align: center;
+    padding: 8px 14px 12px;
+  }
+  .panel-b .big-cost .blabel {
+    font-size: 10px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: #4d4d4d; margin-bottom: 4px;
+  }
+  .panel-b .big-cost .bnum {
+    font-size: 32px; font-weight: 300; color: #3ecf8e;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+  }
+  .panel-b .big-cost .btokens {
+    font-size: 11px; color: #4d4d4d; margin-top: 2px;
+  }
+  /* sparkline area */
+  .panel-b .spark-area {
+    margin: 0 12px 10px;
+    background: #171717;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .panel-b .spark-label {
+    font-size: 9px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: #363636; margin-bottom: 6px;
+  }
+  .sparkline {
+    width: 100%; height: 32px;
+  }
+  /* token breakdown */
+  .panel-b .breakdown {
+    margin: 0 12px 12px;
+  }
+  .panel-b .brow {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .panel-b .brow:last-child { border-bottom: none; }
+  .panel-b .brow-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+  .panel-b .brow-name { font-size: 11px; color: #898989; flex: 1; }
+  .panel-b .brow-val { font-size: 11px; color: #b4b4b4; font-variant-numeric: tabular-nums; }
+
+  .choice-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+  .choice-wrap.selected .panel-a,
+  .choice-wrap.selected .panel-b {
+    border-color: #3ecf8e;
+    box-shadow: 0 0 0 2px rgba(62,207,142,0.25);
+  }
+  .choice-btn {
+    margin-top: 12px;
+    padding: 6px 20px;
+    border-radius: 9999px;
+    border: 1px solid #2e2e2e;
+    background: #171717;
+    color: #898989;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .choice-wrap.selected .choice-btn {
+    background: rgba(62,207,142,0.1);
+    border-color: rgba(62,207,142,0.4);
+    color: #3ecf8e;
+  }
+  .page-title {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    color: #4d4d4d;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .panels-row {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<div style="width:100%">
+  <p class="page-title">点击面板选择你喜欢的风格</p>
+  <div class="panels-row">
+
+  <!-- OPTION A -->
+  <div class="choice-wrap" id="choiceA" onclick="select('A')">
+    <div class="label-top">方案 A — 数据表格型</div>
+    <div class="panel-a">
+      <div class="header">
+        <div class="title"><span class="dot"></span>Claude Usage</div>
+        <div class="refresh">5m ago</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">日</div>
+        <div class="tab">周</div>
+        <div class="tab">月</div>
+        <div class="tab">年</div>
+      </div>
+      <div class="summary">
+        <div class="stat-card">
+          <div class="slabel">花费</div>
+          <div class="sval green">$0.84</div>
+          <div class="sdelta">↑ vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="slabel">Tokens</div>
+          <div class="sval">312k</div>
+          <div class="sdelta down">↓ -12%</div>
+        </div>
+        <div class="stat-card">
+          <div class="slabel">缓存</div>
+          <div class="sval">128k</div>
+          <div class="sdelta">read</div>
+        </div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">近 7 日花费</div>
+        <div class="bars">
+          <div class="bar-col"><div class="bar mid" style="height:18px"></div><div class="bar-day">M</div></div>
+          <div class="bar-col"><div class="bar mid" style="height:28px"></div><div class="bar-day">T</div></div>
+          <div class="bar-col"><div class="bar high" style="height:35px"></div><div class="bar-day">W</div></div>
+          <div class="bar-col"><div class="bar mid" style="height:22px"></div><div class="bar-day">T</div></div>
+          <div class="bar-col"><div class="bar high" style="height:30px"></div><div class="bar-day">F</div></div>
+          <div class="bar-col"><div class="bar mid" style="height:14px"></div><div class="bar-day">S</div></div>
+          <div class="bar-col"><div class="bar today" style="height:38px"></div><div class="bar-day" style="color:#3ecf8e">T</div></div>
+        </div>
+      </div>
+      <div class="model-section">
+        <div class="model-row">
+          <div class="model-name">opus-4</div>
+          <div class="model-tokens">180k</div>
+          <div class="model-bar-wrap"><div class="model-bar-fill" style="width:80%"></div></div>
+          <div class="model-cost">$0.61</div>
+        </div>
+        <div class="model-row">
+          <div class="model-name">sonnet-4</div>
+          <div class="model-tokens">132k</div>
+          <div class="model-bar-wrap"><div class="model-bar-fill" style="width:55%;opacity:0.4"></div></div>
+          <div class="model-cost">$0.23</div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="ftotal">今日合计</div>
+        <div class="fval">$0.84</div>
+      </div>
+    </div>
+    <button class="choice-btn">选择方案 A</button>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="choice-wrap" id="choiceB" onclick="select('B')">
+    <div class="label-top">方案 B — 大数字极简型</div>
+    <div class="panel-b">
+      <div class="bheader">
+        <div class="btitle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3ecf8e" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Claude Usage
+        </div>
+        <span style="font-size:10px;color:#363636">●  live</span>
+      </div>
+      <div class="btabs">
+        <div class="btab active">今日</div>
+        <div class="btab">本周</div>
+        <div class="btab">本月</div>
+        <div class="btab">本年</div>
+      </div>
+      <div class="big-cost">
+        <div class="blabel">Total Cost</div>
+        <div class="bnum">$0.84</div>
+        <div class="btokens">312,480 tokens</div>
+      </div>
+      <div class="spark-area">
+        <div class="spark-label">7-day trend</div>
+        <svg class="sparkline" viewBox="0 0 240 32" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3ecf8e" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#3ecf8e" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,24 L34,18 L68,10 L102,16 L136,8 L170,20 L204,14 L240,4" fill="none" stroke="#3ecf8e" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M0,24 L34,18 L68,10 L102,16 L136,8 L170,20 L204,14 L240,4 L240,32 L0,32Z" fill="url(#sg)"/>
+          <circle cx="240" cy="4" r="3" fill="#3ecf8e"/>
+        </svg>
+      </div>
+      <div class="breakdown">
+        <div class="brow">
+          <div class="brow-dot" style="background:#3ecf8e"></div>
+          <div class="brow-name">Input</div>
+          <div class="brow-val">98,240</div>
+        </div>
+        <div class="brow">
+          <div class="brow-dot" style="background:#1a5c40"></div>
+          <div class="brow-name">Output</div>
+          <div class="brow-val">24,180</div>
+        </div>
+        <div class="brow">
+          <div class="brow-dot" style="background:#363636"></div>
+          <div class="brow-name">Cache Read</div>
+          <div class="brow-val">128,400</div>
+        </div>
+        <div class="brow">
+          <div class="brow-dot" style="background:#2e2e2e"></div>
+          <div class="brow-name">Cache Write</div>
+          <div class="brow-val">61,660</div>
+        </div>
+      </div>
+    </div>
+    <button class="choice-btn">选择方案 B</button>
+  </div>
+
+  </div>
+</div>
+
+<script>
+function select(choice) {
+  document.getElementById('choiceA').classList.remove('selected');
+  document.getElementById('choiceB').classList.remove('selected');
+  document.getElementById('choice' + choice).classList.add('selected');
+  if (window.__recordChoice) window.__recordChoice(choice.toLowerCase(), '方案 ' + choice);
+}
+</script>
+</body>
+</html>

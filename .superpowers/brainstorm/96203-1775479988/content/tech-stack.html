@@ -1,0 +1,38 @@
+<h2>技术栈选择</h2>
+<p class="subtitle">用什么技术来构建这个 macOS 菜单栏 app？</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Swift + SwiftUI（推荐）</h3>
+      <p>原生 macOS 开发，NSStatusItem + NSPopover + SwiftUI 视图。性能最好，体积最小，系统集成最深。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>原生性能，内存占用极低（~10MB）</li><li>SwiftUI 可实现精美自定义 UI</li><li>直接读取本地文件，无需 Node.js 运行时</li><li>可打包为标准 .app</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要 Xcode</li><li>Swift 语言学习成本（若不熟悉）</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Electron + TypeScript</h3>
+      <p>基于 Web 技术（HTML/CSS/JS）构建，可复用 ccusage 的 TypeScript 数据解析逻辑。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>可直接复用 ccusage 的数据解析代码</li><li>Web 技术栈熟悉度高</li><li>UI 灵活，CSS 直接套用 Supabase 设计</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>内存占用大（~150MB+）</li><li>包体积大（~100MB+）</li><li>启动慢</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Tauri + TypeScript</h3>
+      <p>Rust 后端 + WebView 前端，兼顾轻量和 Web 技术栈。可复用 ccusage 数据逻辑，包体积远小于 Electron。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>包体积小（~5MB），内存低（~30MB）</li><li>前端用 Web 技术，可复用 TS 逻辑</li><li>支持 macOS 菜单栏 tray</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>Rust 后端有一定学习成本</li><li>macOS 菜单栏支持不如原生完善</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
