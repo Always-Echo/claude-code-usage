@@ -3,6 +3,7 @@ import SwiftUI
 struct UsagePopoverView: View {
     @ObservedObject var dataService: UsageDataService
     @State private var selectedDimension: TimeDimension = .day
+    @State private var now: Date = Date()
 
     private var stats: AggregatedStats {
         dataService.stats[selectedDimension] ?? .empty
@@ -10,7 +11,7 @@ struct UsagePopoverView: View {
 
     private var refreshLabel: String {
         guard let last = dataService.lastRefreshed else { return "never" }
-        let mins = Int(Date().timeIntervalSince(last) / 60)
+        let mins = Int(now.timeIntervalSince(last) / 60)
         return mins < 1 ? "just now" : "\(mins)m ago"
     }
 
@@ -36,6 +37,9 @@ struct UsagePopoverView: View {
             Divider().background(Color.borderSubtle)
 
             DimensionTabBar(selectedDimension: $selectedDimension)
+                .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+                    now = Date()
+                }
 
             Divider().background(Color.borderSubtle)
 
