@@ -14,7 +14,7 @@ class StatusBarController: NSObject {
         super.init()
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: "Claude Usage")
+            button.image = NSImage(systemSymbolName: "chart.bar.fill", accessibilityDescription: "Claude Usage")
             button.image?.isTemplate = true
             button.action = #selector(togglePopover(_:))
             button.target = self
