@@ -36,7 +36,10 @@ class StatusBarController: NSObject {
             if let button = statusItem.button {
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             }
-            startMouseMonitor()
+            // Delay monitor start so popover has time to appear and mouse to enter it
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.startMouseMonitor()
+            }
         }
     }
 
@@ -47,12 +50,11 @@ class StatusBarController: NSObject {
 
     private func startMouseMonitor() {
         stopMouseMonitor()
-        mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown, .rightMouseDown]) { [weak self] event in
+        mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] event in
             guard let self, self.popover.isShown else { return }
             guard let window = self.popover.contentViewController?.view.window else { return }
             let mouseLocation = NSEvent.mouseLocation
-            let windowFrame = window.frame
-            if !windowFrame.contains(mouseLocation) {
+            if !window.frame.contains(mouseLocation) {
                 Task { @MainActor in
                     self.closePopover()
                 }
