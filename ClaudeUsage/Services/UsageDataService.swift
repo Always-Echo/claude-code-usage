@@ -67,7 +67,8 @@ class UsageDataService: ObservableObject {
     }
 
     func aggregate(entries: [UsageEntry], for dimension: TimeDimension) -> AggregatedStats {
-        let cal = Calendar.current
+        var cal = Calendar.current
+        cal.firstWeekday = 2  // Monday as first day of week
         let now = Date()
 
         func isInCurrentPeriod(_ date: Date) -> Bool {
@@ -126,7 +127,10 @@ class UsageDataService: ObservableObject {
             cacheSavings += calculator.cacheSavings(for: e)
             if let s = e.sessionId { sessions.insert(s) }
             if let p = e.cwd { projects.insert(p) }
-            let model = e.message?.model ?? "unknown"
+            // Skip entries with no real model (synthetic/internal messages)
+            guard let model = e.message?.model,
+                  !model.isEmpty,
+                  !model.hasPrefix("<") else { continue }
             let existing = modelCosts[model] ?? (0, 0)
             modelCosts[model] = (existing.tokens + i + o + cr + cc, existing.cost + cost)
             dates.append(d)
@@ -158,7 +162,7 @@ class UsageDataService: ObservableObject {
         }.sorted { $0.costUSD > $1.costUSD }
 
         // Fix 3: Chart bars with pre-parsed dates
-        let bars = makeChartBars(entries: entries, dimension: dimension, calendar: cal)
+        let bars = makeChartBars(entries: entries, dimension: dimension, calendar: cal as Calendar)
 
         return AggregatedStats(
             totalCostUSD: totalCost, totalTokens: totalTokens,
@@ -232,7 +236,9 @@ class UsageDataService: ObservableObject {
         return (start, end, label, isCurrent)
     }
 
-    private func makeChartBars(entries: [UsageEntry], dimension: TimeDimension, calendar: Calendar) -> [PeriodBar] {
+    private func makeChartBars(entries: [UsageEntry], dimension: TimeDimension, calendar cal: Calendar) -> [PeriodBar] {
+        var calendar = cal
+        calendar.firstWeekday = 2  // Monday as first day of week
         // Fix 3: Pre-parse all dates once — O(n) instead of O(n * barCount)
         let dated: [(UsageEntry, Date)] = entries.compactMap { entry in
             guard let date = parseDate(entry.timestamp) else { return nil }
