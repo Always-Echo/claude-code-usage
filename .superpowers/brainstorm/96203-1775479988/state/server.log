@@ -1,8 +1,0 @@
-{"type":"server-started","port":56994,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56994","screen_dir":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content","state_dir":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/state"}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content/menubar-display.html"}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content/panel-style.html"}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content/tech-stack.html"}
-{"source":"user-event","type":"click","text":"A\n    \n      Swift + SwiftUI（推荐）\n      原生 macOS 开发，NSStatusItem + NSPopover + SwiftUI 视图。性能最好，体积最小，系统集成最深。\n      \n        优点原生性能，内存占用极低（~10MB）SwiftUI 可实现精美自定义 UI直接读取本地文件，无需 Node.js 运行时可打包为标准 .app\n        缺点需要 XcodeSwift 语言学习成本（若不熟悉）","choice":"a","id":null,"timestamp":1775481526094}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content/panel-mockup.html"}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/96203-1775479988/content/panel-a-detailed.html"}
-{"type":"server-stopped","reason":"idle timeout"}

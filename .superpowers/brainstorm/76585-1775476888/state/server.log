@@ -1,7 +1,0 @@
-{"type":"server-started","port":55782,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:55782","screen_dir":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/76585-1775476888/content","state_dir":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/76585-1775476888/state"}
-{"type":"screen-added","file":"/Users/liujun/GithubProjects/claude-code-usage/.superpowers/brainstorm/76585-1775476888/content/refresh-strategy.html"}
-{"source":"user-event","type":"click","text":"A\n    \n      点击时实时读取\n      每次点击菜单栏图标时，实时扫描本地 JSONL 文件并计算。数据始终最新，无后台进程。\n      \n        优点数据实时准确无后台常驻进程\n        缺点点击后有短暂延迟文件多时稍慢","choice":"a","id":null,"timestamp":1775477082623}
-{"source":"user-event","type":"click","text":"B\n    \n      定时自动刷新\n      后台每隔 N 分钟（如 5 分钟）自动重新读取文件，菜单栏图标可显示今日用量摘要。\n      \n        优点打开即看到数据，无等待可在图标上显示实时摘要\n        缺点有后台常驻进程数据可能有几分钟延迟","choice":"b","id":null,"timestamp":1775477086928}
-{"source":"user-event","type":"click","text":"A\n    \n      点击时实时读取\n      每次点击菜单栏图标时，实时扫描本地 JSONL 文件并计算。数据始终最新，无后台进程。\n      \n        优点数据实时准确无后台常驻进程\n        缺点点击后有短暂延迟文件多时稍慢","choice":"a","id":null,"timestamp":1775477087669}
-{"source":"user-event","type":"click","text":"B\n    \n      定时自动刷新\n      后台每隔 N 分钟（如 5 分钟）自动重新读取文件，菜单栏图标可显示今日用量摘要。\n      \n        优点打开即看到数据，无等待可在图标上显示实时摘要\n        缺点有后台常驻进程数据可能有几分钟延迟","choice":"b","id":null,"timestamp":1775477097257}
-{"type":"server-stopped","reason":"idle timeout"}
