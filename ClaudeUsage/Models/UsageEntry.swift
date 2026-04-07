@@ -20,12 +20,14 @@ struct UsageEntry: Codable {
         let outputTokens: Int?
         let cacheCreationInputTokens: Int?
         let cacheReadInputTokens: Int?
+        let speed: String?  // "standard" or "fast" — fast mode costs 5x
 
         enum CodingKeys: String, CodingKey {
             case inputTokens = "input_tokens"
             case outputTokens = "output_tokens"
             case cacheCreationInputTokens = "cache_creation_input_tokens"
             case cacheReadInputTokens = "cache_read_input_tokens"
+            case speed
         }
     }
 }

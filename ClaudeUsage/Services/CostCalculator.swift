@@ -36,10 +36,11 @@ struct CostCalculator {
         let cacheCreate = Double(usage.cacheCreationInputTokens ?? 0)
         let cacheRead = Double(usage.cacheReadInputTokens ?? 0)
 
+        let speedMultiplier = usage.speed == "fast" ? 5.0 : 1.0
         return (input * pricing.inputPerMillion
             + output * pricing.outputPerMillion
             + cacheCreate * pricing.cacheCreationPerMillion
-            + cacheRead * pricing.cacheReadPerMillion) / 1_000_000
+            + cacheRead * pricing.cacheReadPerMillion) / 1_000_000 * speedMultiplier
     }
 
     /// Savings from cache reads: cost avoided by using cache instead of full input pricing.
@@ -48,7 +49,8 @@ struct CostCalculator {
         let model = entry.message?.model ?? ""
         let pricing = pricingTable.first(where: { model.hasPrefix($0.prefix) })?.pricing ?? defaultPricing
         let cacheRead = Double(usage.cacheReadInputTokens ?? 0)
+        let speedMultiplier = usage.speed == "fast" ? 5.0 : 1.0
         let savingsPerMillion = pricing.inputPerMillion - pricing.cacheReadPerMillion
-        return cacheRead * savingsPerMillion / 1_000_000
+        return cacheRead * savingsPerMillion / 1_000_000 * speedMultiplier
     }
 }
